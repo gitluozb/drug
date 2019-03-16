@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="/jquery-1.9.1.min.js"></script>
+    <!-- 引入Bootstrap样式 -->
+    <link rel="stylesheet" href="/bootstrap3/css/bootstrap.css">
+    <script type="text/javascript" src="/bootstrap3/js/bootstrap.js"></script>
+    <!-- 引入Tree样式 -->
+    <link rel="stylesheet" href="/bootstrap-treeview/bootstrap-treeview.min.css">
+    <script type="text/javascript" src="/bootstrap-treeview/bootstrap-treeview.min.js"></script>
+    <!-- 引入选项卡样式 -->
+    <link rel="stylesheet" href="/bootStrap-addTabs/bootstrap.addtabs.css">
+    <script type="text/javascript" src="/bootStrap-addTabs/bootstrap.addtabs.min.js"></script>
+
+    <!-- 引入Table样式 -->
+    <link rel="stylesheet" href="/bootstrap-table/bootstrap-table.css">
+    <script type="text/javascript" src="/bootstrap-table/bootstrap-table.js"></script>
+    <script type="text/javascript" src="/bootstrap-table/locale/bootstrap-table-zh-CN.js"></script>
+    <!-- 引入日期样式 -->
+    <link rel="stylesheet" href="/bootstrap-datetimepicker/css/bootstrap-datetimepicker.css">
+    <script type="text/javascript" src="/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>
+    <script type="text/javascript" src="/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script type="text/javascript" src="/bootstrap-bootbox/bootbox.js"></script>
+</head>
+<body>
+    <table id="historyTable"></table>
+</body>
+<script type="text/javascript">
+    $(function () {
+        initTable();
+    })
+    function initTable() {
+        $("#historyTable").bootstrapTable({
+            url:'http://localhost:8083/settlement/querySettlementHistoryList',
+            method:'get',
+            columns: [{
+                checkbox: true
+            }, {
+                field: 'mediId',
+                title: '商品订单号'
+            }, {
+                field: 'applyTime',
+                title: '结算申请时间'
+            }, {
+                field: 'payAmount',
+                title: '结算金额',
+                formatter:function (value,row,index) {
+                    return "<span style='color: red'>"+value+"</span>"
+                }
+            }, {
+                field: 'applyoverTime',
+                title: '结算时间'
+            },{
+                field: 'applyStatus',
+                title: '结算状态'
+              }
+            ]
+        });
+    }
+</script>
+</html>

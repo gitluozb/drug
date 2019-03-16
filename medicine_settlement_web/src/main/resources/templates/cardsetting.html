@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="/jquery-1.9.1.min.js"></script>
+    <!-- 引入Bootstrap样式 -->
+    <link rel="stylesheet" href="/bootstrap3/css/bootstrap.css">
+    <script type="text/javascript" src="/bootstrap3/js/bootstrap.js"></script>
+    <!-- 引入Tree样式 -->
+    <link rel="stylesheet" href="/bootstrap-treeview/bootstrap-treeview.min.css">
+    <script type="text/javascript" src="/bootstrap-treeview/bootstrap-treeview.min.js"></script>
+    <!-- 引入选项卡样式 -->
+    <link rel="stylesheet" href="/bootStrap-addTabs/bootstrap.addtabs.css">
+    <script type="text/javascript" src="/bootStrap-addTabs/bootstrap.addtabs.min.js"></script>
+
+    <!-- 引入Table样式 -->
+    <link rel="stylesheet" href="/bootstrap-table/bootstrap-table.css">
+    <script type="text/javascript" src="/bootstrap-table/bootstrap-table.js"></script>
+    <script type="text/javascript" src="/bootstrap-table/locale/bootstrap-table-zh-CN.js"></script>
+    <!-- 引入日期样式 -->
+    <link rel="stylesheet" href="/bootstrap-datetimepicker/css/bootstrap-datetimepicker.css">
+    <script type="text/javascript" src="/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>
+    <script type="text/javascript" src="/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script type="text/javascript" src="/bootstrap-bootbox/bootbox.js"></script>
+</head>
+<body>
+<div class="container-fluid" id="this">
+    <div class="row">
+        <form class="form-horizontal" id="myform">
+            <div class="form-group">
+                <label for="depositBank" class="col-sm-2 control-label">开户银行:</label>
+                <div class="col-sm-10">
+                    <input type="text"  id="depositBank" name="depositBank" >
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="bankCardNumber" class="col-sm-2 control-label">银行卡号:</label>
+                <div class="col-sm-10">
+                    <input type="text"  id="bankCardNumber" name="bankCardNumber" >
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="applyPassword" class="col-sm-2 control-label">支付密码:</label>
+                <div class="col-sm-10">
+                    <input type="password"  id="applyPassword" name="applyPassword" >
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="cardholder" class="col-sm-2 control-label">持卡人:</label>
+                <div class="col-sm-10">
+                    <input type="text"  id="cardholder" name="cardholder" >
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button type="button" class="btn btn-default" onclick="next()">下一步</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="container-fluid" id="next" style="display: none;">
+    <div class="row">
+        <form class="form-horizontal" id="youform">
+            <div class="form-group">
+                <label for="depositBank" class="col-sm-2 control-label">开户银行:</label>
+                <div class="col-sm-10">
+                    <input type="text"  name="depositBank" id="bank">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="cardType" class="col-sm-2 control-label">卡类型:</label>
+                <div class="col-sm-10">
+                    <input type="text"  id="cardType" name="cardType" >
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="phoneNumeber" class="col-sm-2 control-label">手机号:</label>
+                <div class="col-sm-10">
+                    <input type="text"   name="phoneNumeber"  id="phoneNumeber">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="misage" class="col-sm-2 control-label">验证码:</label>
+                <div class="col-sm-10">
+                    <input type="text"  id="misage"  name="misage">
+                    <button type="button" class="btn btn-default" onclick="getcode()">获取验证码</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button type="button" class="btn btn-default" onclick="saveBankCard()">保存</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+    <script type="text/javascript">
+        function next(){
+            $("#this").attr('style','display:none');
+            $("#next").attr('style','display:block');
+            $("#bank").val($("#depositBank").val());
+            $("#cardType").val("储蓄卡")
+        }
+
+        function getcode(){
+            var phoneNumeber = $("#phoneNumeber").val();
+            $.ajax({
+                url:'http://192.168.101.112:8083/settlement/getcode',
+                type:'post',
+                data:{
+                    phoneNumeber:phoneNumeber
+                },
+                dataType:'json',
+                success:function(data){
+                    alert(data);
+                }
+            })
+        }
+
+        function saveBankCard(){
+            $.ajax({
+                url:'http://192.168.101.112:8083/settlement/saveBankCard',
+                type:'post',
+                contentType:'application/json;charset=UTF-8',
+                data:JSON.stringify(
+                    {
+                        'depositBank':$("#depositBank").val(),
+                        'bankCardNumber':$("#bankCardNumber").val(),
+                        'applyPassword':$("#applyPassword").val(),
+                        'cardholder':$("#cardholder").val(),
+                        'cardType':$("#cardType").val(),
+                        'phoneNumeber':$("#phoneNumeber").val(),
+                        'misage':$("#misage").val()
+                    }
+                ),
+                dataType:'json',
+                success:function(data){
+                    if(data){
+                        bootbox.alert({
+                            title: "提示",
+                            buttons: {
+                                ok: {
+                                    label: '确认',
+                                    className: 'btn-myStyle'
+                                }
+                            },
+                            message: '绑卡成功',
+                            callback: function() {
+
+                            },
+                        });
+                    }else{
+                        bootbox.alert({
+                            title: "提示",
+                            buttons: {
+                                ok: {
+                                    label: '确认',
+                                    className: 'btn-myStyle'
+                                }
+                            },
+                            message: '绑卡失败',
+                            callback: function() {
+
+                            },
+                        });
+                    }
+                }
+            })
+        }
+    </script>
+</html>

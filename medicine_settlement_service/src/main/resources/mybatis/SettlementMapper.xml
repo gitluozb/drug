@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jk.mapper.MedicineSettlementMapper">
+    <resultMap id="settlementMap" type="com.jk.pojo.SettlementBean">
+        <id column="id" property="id"></id>
+        <result column="settlement_order_id" property="settlementOrderId"></result>
+        <result column="settlement_medi_name" property="settlementMediName"></result>
+        <result column="settlement_medi_specifications" property="settlementMediSpecifications"></result>
+        <result column="settlement_enterprise_id" property="settlementEnterpriseId"></result>
+        <result column="settlement_medi_price" property="settlementMediPrice"></result>
+        <result column="settlement_fact_payment" property="settlementFactPayment"></result>
+        <result column="settlement_promotion" property="settlementPromotion"></result>
+        <result column="settlement_promote_commission" property="settlementPromoteCommission"></result>
+        <result column="settlement_amount_receivable" property="settlementAmountReceivable"></result>
+        <result column="settlement_pay_status" property="settlementPayStatus"></result>
+    </resultMap>
+    <resultMap id="historyMap" type="com.jk.pojo.SettlementHistoryBean">
+        <id column="id" property="id"></id>
+        <result column="medi_id" property="mediId"></result>
+        <result column="apply_time" property="applyTime"></result>
+        <result column="pay_amount" property="payAmount"></result>
+        <result column="applyover_time" property="applyoverTime"></result>
+        <result column="apply_status" property="applyStatus"></result>
+    </resultMap>
+    <select id="querySettlementList" resultMap="settlementMap" parameterType="com.jk.pojo.SettlementBean">
+        select t.*,e.enterprise_name as settlementEnterpriseName
+        from t_settlement t
+        LEFT JOIN t_market m on t.settlement_order_id = m.orderNumber
+        LEFT JOIN t_enterprise_qualification e on t.settlement_enterprise_id = e.enterprise_id
+        <include refid="settlementWhere"></include>
+    </select>
+    <sql id="settlementWhere">
+        <where>
+            <if test="settlementBean.settlementOrderId != null and settlementBean.settlementOrderId !='' ">
+                and t.settlement_order_id = #{settlementBean.settlementOrderId}
+            </if>
+            <if test="settlementBean.settlementMediName != null and settlementBean.settlementMediName != '' ">
+                and t.settlement_medi_name = #{settlementBean.settlementMediName}
+            </if>
+            <if test="settlementBean.settlementEnterpriseName != null and settlementBean.settlementEnterpriseName != ''">
+                and e.enterprise_name = #{settlementBean.settlementEnterpriseName}
+            </if>
+            <if test="settlementBean.settlementPayStatus != null and settlementBean.settlementPayStatus != '' and settlementBean.settlementPayStatus != -1 ">
+                and t.settlement_pay_status = #{settlementBean.settlementPayStatus}
+            </if>
+        </where>
+    </sql>
+    <update id="updateSettlementPayStatus" >
+        update t_settlement set settlement_pay_status = #{status} where id = #{id}
+    </update>
+    <select id="querySettlementInfoById" parameterType="int" resultMap="settlementMap">
+        select * from  t_settlement where id = #{id}
+    </select>
+    <insert id="saveCheck" parameterType="com.jk.pojo.CheckBean" keyProperty="id" useGeneratedKeys="true" >
+        insert into t_check (object_id,check_status,check_user_id)
+        values (#{objectId},#{checkStatus},#{checkUserId})
+    </insert>
+    <select id="findCheckInfoById" parameterType="int" resultType="com.jk.pojo.CheckBean">
+        SELECT object_id as objectId,check_status as checkStatus,check_user_id as checkUserId,check_date as checkDate,s.settlement_order_id as settlementOrderId,s.settlement_amount_receivable as settlementAmountReceivable FROM t_check c
+        LEFT JOIN t_settlement s on c.object_id = s.id
+        where c.id = #{checkId}
+    </select>
+    <insert id="saveSettlementHistory" parameterType="com.jk.pojo.SettlementHistoryBean">
+        insert into t_settlement_history (medi_id,apply_time,pay_amount,applyover_time,apply_status)
+        values (#{mediId},#{applyTime},#{payAmount},#{applyoverTime},#{applyStatus})
+    </insert>
+    <select id="querySettlementHistoryList" resultMap="historyMap">
+        select * from t_settlement_history
+    </select>
+    <insert id="saveBankCard" parameterType="com.jk.pojo.BankCardBean">
+        insert into t_bank_card (deposit_bank,bank_card_number,apply_password,cardholder,card_type,phone_number)
+        values (#{depositBank},#{bankCardNumber},#{applyPassword},#{cardholder},#{cardType},#{phoneNumeber})
+    </insert>
+    <select id="selectOrderCount" resultType="com.jk.pojo.OrderBean">
+        <include refid="timeCondition"></include>
+    </select>
+    <sql id="timeCondition">
+        <if test="selectCountStatus==0">
+            <!--本月-->
+            SELECT count(*) orderCount,orderTime orderTime FROM t_market  WHERE DATE_FORMAT(orderTime, '%Y%m' ) = DATE_FORMAT(CURDATE( ) , '%Y%m' ) group by orderTime
+        </if>
+        <if test="selectCountStatus==7">
+            <!--7天-->
+            SELECT count(*) orderCount,orderTime orderTime FROM t_market  where DATE_SUB(CURDATE(), INTERVAL 7 DAY) &lt;= date(orderTime) group by orderTime
+        </if>
+        <if test="selectCountStatus==30">
+            <!-- 近30天-->
+            SELECT count(*) orderCount,orderTime orderTime FROM t_market  where DATE_SUB(CURDATE(), INTERVAL 30 DAY) &lt;= date(orderTime) group by orderTime
+        </if>
+    </sql>
+
+    <select id="selectSuccessCount" resultType="com.jk.pojo.OrderBean">
+        <include refid="successTimeCondition" ></include>
+    </select>
+    <sql id="successTimeCondition">
+        <if test="selectCountStatus==0">
+            <!--本月-->
+            SELECT count(*) orderCount,orderTime orderTime FROM t_market  WHERE DATE_FORMAT(orderTime, '%Y%m' ) = DATE_FORMAT(CURDATE( ) , '%Y%m' ) and orderStatus=5 group by orderTime
+        </if>
+        <if test="selectCountStatus==7">
+            <!--7天-->
+            SELECT count(*) orderCount,orderTime orderTime FROM t_market  where DATE_SUB(CURDATE(), INTERVAL 7 DAY) &lt;= date(orderTime) and orderStatus=5 group by orderTime
+        </if>
+        <if test="selectCountStatus==30">
+            <!-- 近30天-->
+            SELECT count(*) orderCount,orderTime orderTime FROM t_market  where DATE_SUB(CURDATE(), INTERVAL 30 DAY) &lt;= date(orderTime) and orderStatus=5 group by orderTime
+        </if>
+    </sql>
+</mapper>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" >
+    <title>Title</title>
+    <script type="text/javascript" src="/jquery-1.9.1.min.js"></script>
+    <!-- 引入Bootstrap样式 -->
+    <link rel="stylesheet" href="/bootstrap3/css/bootstrap.css">
+    <script type="text/javascript" src="/bootstrap3/js/bootstrap.js"></script>
+    <!-- 引入Tree样式 -->
+    <link rel="stylesheet" href="/bootstrap-treeview/bootstrap-treeview.min.css">
+    <script type="text/javascript" src="/bootstrap-treeview/bootstrap-treeview.min.js"></script>
+    <!-- 引入选项卡样式 -->
+    <link rel="stylesheet" href="/bootStrap-addTabs/bootstrap.addtabs.css">
+    <script type="text/javascript" src="/bootStrap-addTabs/bootstrap.addtabs.min.js"></script>
+
+    <!-- 引入Table样式 -->
+    <link rel="stylesheet" href="/bootstrap-table/bootstrap-table.css">
+    <script type="text/javascript" src="/bootstrap-table/bootstrap-table.js"></script>
+    <script type="text/javascript" src="/bootstrap-table/locale/bootstrap-table-zh-CN.js"></script>
+    <!-- 引入日期样式 -->
+    <link rel="stylesheet" href="/bootstrap-datetimepicker/css/bootstrap-datetimepicker.css">
+    <script type="text/javascript" src="/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>
+    <script type="text/javascript" src="/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script type="text/javascript" src="/bootstrap-bootbox/bootbox.js"></script>
+    <style type="text/css">
+        .bigcontent{
+            width: 100%;
+            height: 100px;
+            float: left;
+            margin-top: 20px;
+            bottom: 20px;
+            box-shadow: -1px 1px 2px #adadad;
+            box-sizing: border-box;
+            background-color: white;
+        }
+        .left{
+            float:left;
+            margin-left: 280px;
+            box-shadow: 1px 0px 0px #adadad;
+            box-sizing: border-box;
+            margin-top: 17px;
+            width: 433px;
+            height: 67px;
+        }
+        .right{
+            margin-left: 280px;
+            box-shadow: -0px 0px 0px #adadad;
+            box-sizing: border-box;
+            float: left;
+            margin-top: 17px;
+            width: 433px;
+            height: 67px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bigcontent">
+        <div class="left">
+            <img src="/picture/u12799.png"/>
+            <label>待结算金额：￥<span id="settlementprice" style="color: red;"></span></label>
+        </div>
+        <div class="right">
+            <img src="/picture/u12801.png"/>
+            <label>可提现金额：￥<span id="tixian" style="color: red;"></span></label>
+        </div>
+    </div>
+    <div id="toolbar">
+        <form class="form-inline">
+            <div class="form-group">
+                <label for="settlementOrderId">订单号</label>
+                <input type="text" class="form-control" id="settlementOrderId">
+            </div>
+            <div class="form-group">
+                <label for="settlementMediName">商品名称</label>
+                <input type="text" class="form-control" id="settlementMediName">
+            </div>
+            <div class="form-group">
+                <label for="settlementMediName">采购商</label>
+                <input type="text" class="form-control" id="settlementEnterpriseName">
+            </div>
+            <div class="form-group">
+                <label for="settlementPayStatus">结算状态</label>
+                <select class="form-control" id="settlementPayStatus">
+                    <option value="-1">全部</option>
+                    <option value="1">已结算</option>
+                    <option value="2">待结算</option>
+                    <option value="3">可结算</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="search()">搜索</button>
+        </form>
+    </div>
+    <table class="table" id="myTable"></table>
+</body>
+    <script type="text/javascript">
+        $(function () {
+            initTable();
+        })
+        function search() {
+            $('#myTable').bootstrapTable('refresh')
+        }
+        var html = 0;
+        var price=0;
+        function initTable() {
+            $("#myTable").bootstrapTable({
+                url:'http://localhost:8083/settlement/querySettlementList',
+                method:'get',
+                toolbar:"#toolbar",
+                queryParams:function(){
+                    return {
+                        name:JSON.stringify({'settlementOrderId':$("#settlementOrderId").val(),'settlementMediName':$("#settlementMediName").val(),'settlementEnterpriseName':$("#settlementEnterpriseName").val(),'settlementPayStatus':$("#settlementPayStatus").val()})
+                    };
+                },
+                columns: [{
+                    checkbox: true
+                }, {
+                    field: 'settlementOrderId',
+                    title: '订单商品号'
+                }, {
+                    field: 'settlementMediName',
+                    title: '商品名称'
+                }, {
+                    field: 'settlementMediSpecifications',
+                    title: '规格'
+                }, {
+                    field: 'settlementEnterpriseName',
+                    title: '采购企业'
+                },{
+                    field: 'settlementMediPrice',
+                    title: '单价'
+                },{
+                    field: 'settlementFactPayment',
+                    title: '实结货款',
+                    formatter:function(value,row,index){
+                        html += value;
+                        $("#settlementprice").text(html);
+                        return value;
+                    }
+                },{
+                    field: 'settlementPromotion',
+                    title: '促销'
+                },{
+                    field: 'settlementPromoteCommission',
+                    title: '推广佣金'
+                },{
+                    field: 'settlementAmountReceivable',
+                    title: '应收金额',
+                    formatter:function(value,row,index){
+                        if (row.settlementPayStatus == 1){
+                            price += value;
+                            $("#tixian").text(price);
+                        }
+                        return value;
+                    }
+                },{
+                    field: 'settlementPayStatus',
+                    title: '结算状态',
+                    formatter:function(value,row,index){
+                        return value == 1 ? "已结算" : (value == 2 ? "待结算" : value == 3 ? "可结算" : "")
+                    }
+                },{
+                    field:'operation',
+                    title:'操作',
+                    formatter:function(value,row,index){
+                        if (row.settlementPayStatus == 1 || row.settlementPayStatus == 2) {
+                            var html='<button type="button" class="btn btn-primary" onclick="queryinfo('+row.id+')">查看</button>'
+                        }else{
+                            var html='<button type="button" class="btn btn-primary" onclick="queryinfo()">查看</button> <button type="button" class="btn btn-primary" onclick="applySettlement('+row.id+',2)">申请结算</button>'
+                        }
+                        return html;
+                    }
+                  }
+                ]
+            });
+        }
+
+        function applySettlement(id,status){
+            $.ajax({
+                url:'http://localhost:8083/settlement/updateSettlementPayStatus',
+                type:'post',
+                data:{
+                    id:id,
+                    status:status
+                },
+                dataType:'json',
+                success:function () {
+                    bootbox.alert({
+                        title: "提示",
+                        buttons: {
+                            ok: {
+                                label: '确认',
+                                className: 'btn-myStyle'
+                            }
+                        },
+                        message: '申请成功，等待审核',
+                        callback: function() {
+                            search();
+                        },
+                    });
+                }
+            })
+        }
+    </script>
+</html>

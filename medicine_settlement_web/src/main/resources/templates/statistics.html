@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://img.highcharts.com.cn/jquery/jquery.min.js"></script>
+    <script src="https://img.highcharts.com.cn/highcharts/highcharts.js"></script>
+    <script src="https://img.highcharts.com.cn/highcharts/modules/exporting.js"></script>
+    <script src="https://img.highcharts.com.cn/highcharts/modules/data.js"></script>
+    <script src="https://img.highcharts.com.cn/highcharts/modules/series-label.js"></script>
+    <script src="https://img.highcharts.com.cn/highcharts/modules/oldie.js"></script>
+    <script src="https://img.highcharts.com.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
+    <style type="text/css">
+        .head{
+            margin-left: 50px;
+        }
+    </style>
+</head>
+<body style="height:600px; margin: 0">
+<div class="head">
+    <label>统计周期:</label>
+    <select id="selectCountStatus" onchange="selectCountStatus()">
+        <option value="0" selected>本月统计</option>
+        <option value="7">最近一周</option>
+        <option value="30">最近30天</option>
+    </select>
+    <h1>30日下单量与成交量</h1>
+</div>
+<div id="container" style="height: 100%"></div>
+</body>
+<script type="text/javascript">
+    $(function(){
+        selectCountStatus();
+    })
+    Highcharts.setOptions({ global: { useUTC: false } });
+    arr=[];
+    orderCount=[];
+    successful=[];
+    ordersuccessful = [];
+    function selectCountStatus(){
+        $.ajax({
+            url:'http://192.168.101.112:8083/settlement/orderAndSuccessCount',
+            type:'get',
+            data:{
+                selectCountStatus:$("#selectCountStatus").val()
+            },
+            dataType:'json',
+            success:function (data) {
+                for (var i =0 ; i< data.orderCount.length; i++){
+                    arr.push(data.orderCount[i].orderTime);
+                    orderCount.push(data.orderCount[i].orderCount);
+                }
+                for (var i =0 ; i< data.successCount.length; i++) {
+                    successful.push(data.successCount[i].orderTime);
+                    ordersuccessful.push(data.successCount[i].orderCount);
+                }
+                var title = {
+                    text: '结算统计图'
+                };
+                var subtitle = {
+                    text: '   --罗忠博'
+                };
+                var xAxis = {
+                    // tickInterval: 2 * 24 * 3600 * 1000, // 坐标轴刻度间隔为两天
+                    categories: arr
+                };
+                var yAxis = {
+                    title: {
+                        text: 'Count(单)'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                };
+
+
+                var tooltip = {
+                    valueSuffix: '单'
+                };
+
+
+                var legend = {
+                    layout: 'horizontal',
+                    align: 'center',
+                    verticalAlign: 'top',
+                    borderWidth: 0
+                };
+
+
+                var series =  [
+                    {
+                        name: '订单量',
+                        data: orderCount
+                    },
+                    {
+                        name: '总成交量',
+                        data: ordersuccessful
+                    }
+                ];
+
+
+                var json = {};
+
+
+                json.title = title;
+                json.subtitle = subtitle;
+                json.xAxis = xAxis;
+                json.yAxis = yAxis;
+                json.tooltip = tooltip;
+                json.legend = legend;
+                json.series = series;
+
+
+                $('#container').highcharts(json);
+            }
+        })
+    }
+
+
+
+</script>
+</html>

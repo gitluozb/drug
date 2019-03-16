@@ -10,6 +10,10 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>drug_common</module>
+        <module>medicine_settlement_api</module>
+        <module>medicine_settlement_web</module>
+        <module>medicine_settlement_service</module>
+        <module>drug_eureka</module>
     </modules>
 
 
